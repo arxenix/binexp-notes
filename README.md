@@ -52,7 +52,7 @@ Would be called with:
 push 2 ; c
 push 5 ; b
 push 10 ; a
-call _MyFunction2
+call _MyFunction3
 ```
 
 Example 2:
