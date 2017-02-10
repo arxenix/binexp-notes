@@ -3,7 +3,7 @@ notes to remember about binary exploitation, the stack and heap
 
 
 ## Program Layout
-[http://i.imgur.com/bcU5U0Y.png](Process Memory)
+[Process Memory](http://i.imgur.com/bcU5U0Y.png)
 
 
 ## Stack
