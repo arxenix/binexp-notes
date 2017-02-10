@@ -12,7 +12,7 @@ notes to remember about binary exploitation, the stack and heap
 Stack grows *downward*. When we push onto stack, 4 is subtracted from esp, and when we pop from stack, 4 is added to esp.
 
 Say we wanted to create an array of byte values on the stack, 100 items long. We want to store the pointer to the base of this array in *edi*.:
-```
+```asm
 sub esp, 100  ; num of bytes in our array
 mov edi, esp  ; copy address of 100 bytes area to edi
 ```
@@ -48,7 +48,7 @@ _MyFunction3:
 ```
 
 Would be called with:
-```
+```asm
 push 2 ; c
 push 5 ; b
 push 10 ; a
