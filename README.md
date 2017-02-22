@@ -6,9 +6,11 @@ notes to remember about binary exploitation, the stack and heap
 ![Process Memory](http://i.imgur.com/bcU5U0Y.png)
 
 ## Registers
-`esp` - **Stack Pointer** - register that always points to top of the stack. Changed whenever stuff is pushed/popped from stack
+`esp` - **Stack Pointer** - register that always points to top of the stack. Changed whenever stuff is pushed/popped from stack.
+
 `ebp` - **Base Pointer** - register that points to the start of the current stack frame. More convenient to reference function parameters & local variables than using esp directly.
-`eip` - **Instruction Pointer** - register that contains address of next function to be executed
+
+`eip` - **Instruction Pointer** - register that contains address of next function to be executed.
 
 
 ## Stack
