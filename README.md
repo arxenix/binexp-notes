@@ -208,5 +208,10 @@ So, how do we find the correct offset now?
 
 Subtracting the 2 will get the distance from `buf` to `ebp`! In this case, it turns out to be 24. Add 4 more to overwrite ebp, then the next 4 bytes will overwrite esp. So, our exploit becomes `'A'*28+'\xad\x84\x04\x08'`.
 
-## ROP Chainz
-//TODO
+## SHELLCODE!!!
+
+We used ROP to overwrite EIP, and make the program flow jump to an address, which was another function.
+
+
+What if we define our own function in the buffer, and overwrite EIP to make the program jump to our own function? That's exactly how shellcode works! Using this technique, we can execute whatever code we want.
+
