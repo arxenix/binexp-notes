@@ -215,3 +215,15 @@ We used ROP to overwrite EIP, and make the program flow jump to an address, whic
 
 What if we define our own function in the buffer, and overwrite EIP to make the program jump to our own function? That's exactly how shellcode works! Using this technique, we can execute whatever code we want.
 
+//TODO example
+## GOT
+
+## ret2libc
+
+## ROP Chainz
+
+## ret2plt
+
+## Stack Canaries/Cookies
+
+## Heap Overflow
