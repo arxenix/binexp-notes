@@ -1,5 +1,5 @@
 # binexp-notes
-notes to remember about binary exploitation, the stack and heap
+notes to remember about binary exploitation, the stack and heap. This all assumes 32-bit architecture.
 
 
 ## Program Layout
@@ -67,9 +67,11 @@ call _MyFunction3
 the `call` intruction is equivalent to
 
 ```
-push eip + 2 ; return address is current address + size of two instructions
+push eip + 2 ; return address is current address + size of two instructions B
 jmp _MyFunction3
 ```
+
+It pushes `eip` onto the stack! This is so the stack frame knows what address to return to!
 
 ### Example 2:
 ```asm
@@ -97,3 +99,83 @@ int Question1(int x, int y)
     return y + z;
  }
  ```
+
+
+## Simple value buffer overflow
+```c
+void vuln(char *input){
+    char buf[16];
+    int secret = 0;
+    strcpy(buf, input);
+
+    if (secret == 0xc0deface){
+        give_shell();
+    }else{
+        printf("The secret is %x\n", secret);
+    }
+}
+```
+
+`strcpy()` doesn't do length-checking or anything. If we have control over the input, we can overflow the buffer, and write arbitrary data to the stack. What does the stack look like in this program?
+
+```
+// bottom of stack (high mem address)
+
+...
+input*                            [4 bytes]
+saved EIP (return address)        [4 bytes]
+saved EBP (saved stack frame ptr) [4 bytes]
+secret                            [4 bytes int (probably)]
+buf                               [16 bytes]
+
+//top of stack (low mem address)
+```
+
+We can overwrite secret, because strcpy() will keep reading from our input, go past the 16 bytes of the buffer, and start overwriting secret.
+
+Setting `input` to `AAAAAAAAAAAAAAAA\xce\xfa\xde\xc0` would fill **buff** to `AAAAAAAAAAAAAAAA` and overwrite **secret** to `0xc0deface`. (keep track of endianness!)
+
+## Basic ROP (return-oriented programming)
+
+A simple buffer overflow let us overwrite a value on the stack, but... we can go further. What's preventing us from overwriting EIP?
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* This never gets called! */
+void give_shell(){
+    gid_t gid = getegid();
+    setresgid(gid, gid, gid);
+    system("/bin/sh -i");
+}
+
+void vuln(char *input){
+    char buf[16];
+    strcpy(buf, input);
+}
+
+int main(int argc, char **argv){
+    if (argc > 1)
+        vuln(argv[1]);
+    return 0;
+}
+```
+
+In this case, our `vuln` function is still vulnerable to a buffer overflow attack. At first glance, it doesn't seem like there's any way to execute the `give_shell()` function though.
+
+Let's look at the stack again...
+
+```
+// bottom of stack (high mem address)
+
+...
+input*                            [4 bytes]
+saved EIP (return address)        [4 bytes]
+saved EBP (saved stack frame ptr) [4 bytes]
+buf                               [16 bytes]
+
+//top of stack (low mem address)
+```
+
