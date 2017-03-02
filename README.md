@@ -119,17 +119,17 @@ void vuln(char *input){
 `strcpy()` doesn't do length-checking or anything. If we have control over the input, we can overflow the buffer, and write arbitrary data to the stack. What does the stack look like in this program?
 
 ```
-// bottom of stack (high mem address)
+//top of stack (low mem address)
+buf                               [16 bytes]
+secret                            [4 bytes int (probably)]
+saved EBP (saved stack frame ptr) [4 bytes]
+saved EIP (return address)        [4 bytes]
+input*                            [4 bytes]
 
 ...
-input*                            [4 bytes]
-saved EIP (return address)        [4 bytes]
-saved EBP (saved stack frame ptr) [4 bytes]
-secret                            [4 bytes int (probably)]
-buf                               [16 bytes]
-
-//top of stack (low mem address)
+// bottom of stack (high mem address)
 ```
+
 
 We can overwrite secret, because strcpy() will keep reading from our input, go past the 16 bytes of the buffer, and start overwriting secret.
 
@@ -165,17 +165,48 @@ int main(int argc, char **argv){
 
 In this case, our `vuln` function is still vulnerable to a buffer overflow attack. At first glance, it doesn't seem like there's any way to execute the `give_shell()` function though.
 
-Let's look at the stack again...
+Let's try and predict the stack again...
 
 ```
-// bottom of stack (high mem address)
+//top of stack (low mem address)
+buf                               [16 bytes]
+saved EBP (saved stack frame ptr) [4 bytes]
+saved EIP (return address)        [4 bytes]
+input*                            [4 bytes]
 
 ...
-input*                            [4 bytes]
-saved EIP (return address)        [4 bytes]
-saved EBP (saved stack frame ptr) [4 bytes]
-buf                               [16 bytes]
-
-//top of stack (low mem address)
+// bottom of stack (high mem address)
 ```
 
+What happens when we overwrite buf, saved EBP, and then overwrite EIP. We can set EIP to whatever we want. This would make the program return to whatever address we want when it reaches EIP!
+
+The address of the `give_shell()` function can be found with `print &give_shell` in gdb. For ex, let's say it is `0x80484ad`.
+
+Ideally, we would set `input` to `'A'*20+'\xad\x84\x04\x08'`... however, it won't work. Why? In reality, there is probably stuff between buf and the saved EBP. Certain compilers can add stuff like padding in between. Our stack actually looks like this:
+
+```
+//top of stack (low mem address)
+buf                               [16 bytes]
+some crap                         [??? bytes]
+saved EBP (saved stack frame ptr) [4 bytes]
+saved EIP (return address)        [4 bytes]
+input*                            [4 bytes]
+
+...
+// bottom of stack (high mem address)
+```
+
+
+
+So, how do we find the correct offset now?
+
+**Noob way:** Trial and error
+
+
+**Proper way:** GDB! We can add a breakpoint on `strcpy`. Then get the first arg to strcpy (address of buf) with `x/wx $esp`. This prints out 1 word from the top of the stack. We can then compare to ebp, which will point to our saved ebp: `p/x $ebp`.
+
+
+Subtracting the 2 will get the distance from `buf` to `ebp`! In this case, it turns out to be 24. Add 4 more to overwrite ebp, then the next 4 bytes will overwrite esp. So, our exploit becomes `'A'*28+'\xad\x84\x04\x08'`.
+
+## ROP Chainz
+//TODO
