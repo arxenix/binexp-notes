@@ -216,11 +216,20 @@ We used ROP to overwrite EIP, and make the program flow jump to an address, whic
 What if we define our own function in the buffer, and overwrite EIP to make the program jump to our own function? That's exactly how shellcode works! Using this technique, we can execute whatever code we want.
 
 //TODO example
+
+## ret2libc (bypass NX)
+If NX is on, the stack cannot be executed, so shellcode doesn't work. Instead, we can only execute data in areas such as the program .text section.
+
+Libc is very big, if the binary has a linked libc, we can set EIP to point to a function within libc, such as `system()`! 
+
+## ROP Gadget (bypass NX)
+Same idea as before -- use bits of code from the program's `.text` section and jump to them instead. EIP Doesn't have to point to the start of a function, it can point anywhere. We can find "gadgets" which contain useful bits of assembly instruction we might want to execute. 
+
+ROP Gadgets typically end with the `ret` instruction, which pops the top value off the stack, and jumps to it. We can therefore chain multiple ROP Gadgets together for arbitrary assembly instruction execution! Just overwrite EIP and past EIP with your ROP gadget addresses.
+
+Use https://github.com/JonathanSalwan/ROPgadget for finding them.
+
 ## GOT
-
-## ret2libc
-
-## ROP Chainz
 
 ## ret2plt
 
