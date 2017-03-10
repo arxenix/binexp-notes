@@ -222,10 +222,35 @@ If NX is on, the stack cannot be executed, so shellcode doesn't work. Instead, w
 
 Libc is very big, if the binary has a linked libc, we can set EIP to point to a function within libc, such as `system()`! 
 
-## ROP Gadget (bypass NX)
+How do we control its arguments? Remember how stack frames work:
+```
+//top of stack
+function local variables
+ebp
+eip
+function args
+// bottom of stack
+```
+
+Before we call a function, it is the caller's responsibility to push function arguments onto the stack, and save EIP. (it is the responsibility of the function to save EBP and push local variables)
+
+
+`system()` takes in 1 argument, a `char *` for the string command to execute. We can locate the address of the string `/bin/sh` in the binary.
+
+Now, exploit string can look like this: `buffer_overflow + system_address + "AAAA" + bin_sh_address`.
+
+It will jump to the system() call, and the function args will be on the stack correctly! It will segfault after, because it will return to 0x41414141 address. To get shell without it exiting, run a hanging command like `(python pwn.py; cat) | ./binary`
+
+## ROP Gadgets and ROP Chainz (bypass NX)
 Same idea as before -- use bits of code from the program's `.text` section and jump to them instead. EIP Doesn't have to point to the start of a function, it can point anywhere. We can find "gadgets" which contain useful bits of assembly instruction we might want to execute. 
 
-ROP Gadgets typically end with the `ret` instruction, which pops the top value off the stack, and jumps to it. We can therefore chain multiple ROP Gadgets together for arbitrary assembly instruction execution! Just overwrite EIP and past EIP with your ROP gadget addresses.
+Must end with the `ret` instruction, which pops the top value off the stack, and jumps to it (end of a function). We can therefore chain multiple ROP Gadgets together for arbitrary assembly instruction execution!
+
+We jump to the first ROP gadget, which runs some assembly code and returns. Then execution jumps to our next ROP gadget because it thinks it is EIP!
+
+Ex: `buffer_overflow + gadget_1_addr + gadget_2_addr + gadget_3_addr`
+
+
 
 Use https://github.com/JonathanSalwan/ROPgadget for finding them.
 
