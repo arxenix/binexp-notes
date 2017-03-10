@@ -246,7 +246,7 @@ Same idea as before -- use bits of code from the program's `.text` section and j
 
 Must end with the `ret` instruction, which pops the top value off the stack, and jumps to it (end of a function). We can therefore chain multiple ROP Gadgets together for arbitrary assembly instruction execution!
 
-We jump to the first ROP gadget, which runs some assembly code and returns. Then execution jumps to our next ROP gadget because it thinks it is EIP!
+We jump to the first ROP gadget, which runs some assembly code and returns. Then execution jumps to our next ROP gadget because it thinks it is EIP.
 
 Ex: `buffer_overflow + gadget_1_addr + gadget_2_addr + gadget_3_addr`
 
